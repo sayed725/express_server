@@ -50,12 +50,26 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Hello Next level developers!");
 });
 
-app.post("/", (req: Request, res: Response) => {
-  console.log(req.body);
+app.post("/users", async (req: Request, res: Response) => {
+  const { name, email, age, phone, address } = req.body;
 
-  res
-    .status(201)
-    .send({ success: true, message: "Data received successfully" });
+  try {
+    const result = await pool.query(
+      `INSERT INTO users(name, email) VALUES($1, $2) RETURNING *`,
+      [name, email]
+    );
+    console.log(result);
+
+    res.status(201).json({
+      success: true,
+      message: "User created successfully",
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
 });
 
 app.listen(port, () => {
