@@ -1,3 +1,4 @@
+import { Result } from "./../node_modules/@types/pg/index.d";
 import express, { NextFunction, Request, Response } from "express";
 import { Pool } from "pg";
 import dotenv from "dotenv";
@@ -48,12 +49,9 @@ initDB();
 
 // logger middleware
 const logger = (req: Request, res: Response, next: NextFunction) => {
-    console.log(`${req.method} ${req.path} -- [${new Date().toISOString()}] \n`);
-    next();
-}
-
-
-
+  console.log(`${req.method} ${req.path} -- [${new Date().toISOString()}] \n`);
+  next();
+};
 
 // Root Endpoint
 app.get("/", logger, (req: Request, res: Response) => {
@@ -164,7 +162,10 @@ app.delete("/users/:id", async (req: Request, res: Response) => {
   // console.log(req.params.id);
   const { id } = req.params;
   try {
-    const result = await pool.query(`DELETE FROM users WHERE id=$1 RETURNING *`, [id]);
+    const result = await pool.query(
+      `DELETE FROM users WHERE id=$1 RETURNING *`,
+      [id]
+    );
 
     if (result.rowCount === 0) {
       return res.status(404).json({
@@ -175,7 +176,7 @@ app.delete("/users/:id", async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       message: "User deleted successfully",
-      data: result.rows
+      data: result.rows,
     });
   } catch (err: any) {
     res.status(500).json({
@@ -186,26 +187,28 @@ app.delete("/users/:id", async (req: Request, res: Response) => {
   }
 });
 
-
 // todo creation crud endpoint
-app.post("/todos", async (req: Request,res: Response)=>{
-    const {user_id, title, description, due_date} = req.body;
-     
-    try {
-        const result = await pool.query(`INSERT INTO todos(user_id, title) VALUES($1, $2) RETURNING *`, [user_id, title]);
-        res.status(201).json({
-            success: true,
-            message: "Todos created successfully",
-            data: result.rows[0],
-        });
-    } catch (err: any) {
+app.post("/todos", async (req: Request, res: Response) => {
+  const { user_id, title, description, due_date } = req.body;
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO todos(user_id, title) VALUES($1, $2) RETURNING *`,
+      [user_id, title]
+    );
+    res.status(201).json({
+      success: true,
+      message: "Todos created successfully",
+      data: result.rows[0],
+    });
+  } catch (err: any) {
     res.status(500).json({
       success: false,
       message: err.message,
       details: err,
     });
   }
-})
+});
 
 // todo get all endpoint
 app.get("/todos", async (req: Request, res: Response) => {
@@ -225,20 +228,100 @@ app.get("/todos", async (req: Request, res: Response) => {
   }
 });
 
+// todo get by id endpoint
+app.get("/todos/:id", async (req: Request, res: Response) => {
+  const { id } = req.params;
 
-
-
-
-
-
-// not-found route 
-app.use((req: Request, res: Response)=>{
-    res.status(404).json({
+  try {
+    const result = await pool.query(`SELECT * FROM todos WHERE id=$1`, [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({
         success: false,
-        message: "Route not found",
-        path: req.path
-    })
-})
+        message: "Todos not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Todos fetched successfully",
+      data: result.rows[0],
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+      details: err,
+    });
+  }
+});
+
+// todo update by id endpoint
+app.put("/todos/:id", async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { title, description, due_date } = req.body;
+
+  try {
+    const result = await pool.query(
+      `UPDATE todos SET title=$1 WHERE id=$2 RETURNING *`,
+      [title, id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Todos not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Todos updated successfully",
+      data: result.rows[0],
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+      details: err,
+    });
+  }
+});
+
+// todo delete by id endpoint
+app.delete("/todos/:id", async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `DELETE FROM todos WHERE id=$1 RETURNING *`,
+      [id]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Todos not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Todos deleted successfully",
+      data: result.rows,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+      details: err,
+    });
+  }
+});
+
+// not-found route
+app.use((req: Request, res: Response) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+    path: req.path,
+  });
+});
+
 
 
 app.listen(port, () => {
