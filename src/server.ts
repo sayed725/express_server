@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { NextFunction, Request, Response } from "express";
 import { Pool } from "pg";
 import dotenv from "dotenv";
 import Path from "path";
@@ -46,7 +46,17 @@ const initDB = async () => {
 
 initDB();
 
-app.get("/", (req: Request, res: Response) => {
+// logger middleware
+const logger = (req: Request, res: Response, next: NextFunction) => {
+    console.log(`${req.method} ${req.path} -- [${new Date().toISOString()}] \n`);
+    next();
+}
+
+
+
+
+// Root Endpoint
+app.get("/", logger, (req: Request, res: Response) => {
   res.send("Hello Next level developers!");
 });
 
@@ -221,7 +231,14 @@ app.get("/todos", async (req: Request, res: Response) => {
 
 
 
-
+// not-found route 
+app.use((req: Request, res: Response)=>{
+    res.status(404).json({
+        success: false,
+        message: "Route not found",
+        path: req.path
+    })
+})
 
 
 app.listen(port, () => {
