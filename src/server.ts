@@ -50,6 +50,7 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Hello Next level developers!");
 });
 
+// User  Creation Endpoint
 app.post("/users", async (req: Request, res: Response) => {
   const { name, email, age, phone, address } = req.body;
 
@@ -58,11 +59,12 @@ app.post("/users", async (req: Request, res: Response) => {
       `INSERT INTO users(name, email) VALUES($1, $2) RETURNING *`,
       [name, email]
     );
-    console.log(result);
+    // console.log(result.rows[0]);
 
     res.status(201).json({
       success: true,
-      message: "User created successfully",
+      message: "Data inserted successfully",
+      data: result.rows[0],
     });
   } catch (err: any) {
     res.status(500).json({
@@ -71,6 +73,122 @@ app.post("/users", async (req: Request, res: Response) => {
     });
   }
 });
+
+// User get Endpoint
+app.get("/users", async (req: Request, res: Response) => {
+  try {
+    const result = await pool.query(`SELECT * FROM users`);
+    res.status(200).json({
+      success: true,
+      message: "Users fetched successfully",
+      data: result.rows,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+      details: err,
+    });
+  }
+});
+
+// User get by id Endpoint
+app.get("/users/:id", async (req: Request, res: Response) => {
+  // console.log(req.params.id);
+  const { id } = req.params;
+  try {
+    const result = await pool.query(`SELECT * FROM users WHERE id=$1`, [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "User fetched successfully",
+      data: result.rows[0],
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+      details: err,
+    });
+  }
+});
+
+// User update by id Endpoint
+app.put("/users/:id", async (req: Request, res: Response) => {
+  // console.log(req.params.id);
+  const { name, email, age, phone, address } = req.body;
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      `UPDATE users SET name=$1, email=$2 WHERE id=$3 RETURNING *`,
+      [name, email, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      data: result.rows[0],
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+      details: err,
+    });
+  }
+});
+
+// User delete by id Endpoint
+app.delete("/users/:id", async (req: Request, res: Response) => {
+  // console.log(req.params.id);
+  const { id } = req.params;
+  try {
+    const result = await pool.query(`DELETE FROM users WHERE id=$1 RETURNING *`, [id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+      data: result.rows
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+      details: err,
+    });
+  }
+});
+
+
+// todo creation crud endpoint
+
+
+
+
+
+
+
+
+
+
+
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
