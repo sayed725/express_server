@@ -28,32 +28,6 @@ app.get("/", logger, (req: Request, res: Response) => {
 app.use("/users", userRoutes);
 
 
-// User get by id Endpoint
-app.get("/users/:id", async (req: Request, res: Response) => {
-  // console.log(req.params.id);
-  const { id } = req.params;
-  try {
-    const result = await pool.query(`SELECT * FROM users WHERE id=$1`, [id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-    res.status(200).json({
-      success: true,
-      message: "User fetched successfully",
-      data: result.rows[0],
-    });
-  } catch (err: any) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-      details: err,
-    });
-  }
-});
-
 // User update by id Endpoint
 app.put("/users/:id", async (req: Request, res: Response) => {
   // console.log(req.params.id);
