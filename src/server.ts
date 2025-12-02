@@ -1,7 +1,8 @@
-import express, { NextFunction, Request, Response } from "express";
+import express, { Request, Response } from "express";
 import config from "./config";
 import initDB, { pool } from "./config/db";
 import logger from "./middleware/logger";
+import { userRoutes } from "./modules/user/user.routes";
 
 
 
@@ -23,47 +24,9 @@ app.get("/", logger, (req: Request, res: Response) => {
   res.send("Hello Next level developers!");
 });
 
-// User  Creation Endpoint
-app.post("/users", async (req: Request, res: Response) => {
-  const { name, email, age, phone, address } = req.body;
+// User Endpoint
+app.use("/users", userRoutes);
 
-  try {
-    const result = await pool.query(
-      `INSERT INTO users(name, email) VALUES($1, $2) RETURNING *`,
-      [name, email]
-    );
-    // console.log(result.rows[0]);
-
-    res.status(201).json({
-      success: true,
-      message: "Data inserted successfully",
-      data: result.rows[0],
-    });
-  } catch (err: any) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-});
-
-// User get Endpoint
-app.get("/users", async (req: Request, res: Response) => {
-  try {
-    const result = await pool.query(`SELECT * FROM users`);
-    res.status(200).json({
-      success: true,
-      message: "Users fetched successfully",
-      data: result.rows,
-    });
-  } catch (err: any) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-      details: err,
-    });
-  }
-});
 
 // User get by id Endpoint
 app.get("/users/:id", async (req: Request, res: Response) => {
