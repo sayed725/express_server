@@ -28,66 +28,9 @@ app.get("/", logger, (req: Request, res: Response) => {
 app.use("/users", userRoutes);
 
 
-// User update by id Endpoint
-app.put("/users/:id", async (req: Request, res: Response) => {
-  // console.log(req.params.id);
-  const { name, email, age, phone, address } = req.body;
-  const { id } = req.params;
-  try {
-    const result = await pool.query(
-      `UPDATE users SET name=$1, email=$2 WHERE id=$3 RETURNING *`,
-      [name, email, id]
-    );
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-    res.status(200).json({
-      success: true,
-      message: "User updated successfully",
-      data: result.rows[0],
-    });
-  } catch (err: any) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-      details: err,
-    });
-  }
-});
 
-// User delete by id Endpoint
-app.delete("/users/:id", async (req: Request, res: Response) => {
-  // console.log(req.params.id);
-  const { id } = req.params;
-  try {
-    const result = await pool.query(
-      `DELETE FROM users WHERE id=$1 RETURNING *`,
-      [id]
-    );
 
-    if (result.rowCount === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-    res.status(200).json({
-      success: true,
-      message: "User deleted successfully",
-      data: result.rows,
-    });
-  } catch (err: any) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-      details: err,
-    });
-  }
-});
 
 // todo creation crud endpoint
 app.post("/todos", async (req: Request, res: Response) => {
