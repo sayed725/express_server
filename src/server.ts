@@ -3,6 +3,7 @@ import config from "./config";
 import initDB, { pool } from "./config/db";
 import logger from "./middleware/logger";
 import { userRoutes } from "./modules/user/user.routes";
+import { todoRoutes } from "./modules/todo/todo.routes";
 
 
 
@@ -27,51 +28,13 @@ app.get("/", logger, (req: Request, res: Response) => {
 // User Endpoint
 app.use("/users", userRoutes);
 
+// Todo Endpoints
+app.use("/todos", todoRoutes);
 
 
 
 
 
-// todo creation crud endpoint
-app.post("/todos", async (req: Request, res: Response) => {
-  const { user_id, title, description, due_date } = req.body;
-
-  try {
-    const result = await pool.query(
-      `INSERT INTO todos(user_id, title) VALUES($1, $2) RETURNING *`,
-      [user_id, title]
-    );
-    res.status(201).json({
-      success: true,
-      message: "Todos created successfully",
-      data: result.rows[0],
-    });
-  } catch (err: any) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-      details: err,
-    });
-  }
-});
-
-// todo get all endpoint
-app.get("/todos", async (req: Request, res: Response) => {
-  try {
-    const result = await pool.query(`SELECT * FROM todos`);
-    res.status(200).json({
-      success: true,
-      message: "Todos fetched successfully",
-      data: result.rows,
-    });
-  } catch (err: any) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-      details: err,
-    });
-  }
-});
 
 // todo get by id endpoint
 app.get("/todos/:id", async (req: Request, res: Response) => {
