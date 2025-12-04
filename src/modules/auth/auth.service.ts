@@ -1,13 +1,14 @@
 import { pool } from "../../config/db";
 import bcrypt from "bcryptjs";
 import jwt from  "jsonwebtoken";
+import config from "../../config";
 
 const loginUser = async (email: string, password: string) => {
   const result = await pool.query(`SELECT * FROM users WHERE email=$1`, [
     email,
   ]);
 
-  console.log({ result });
+//   console.log({ result });
   if (result.rows.length === 0) {
     return null;
   }
@@ -20,11 +21,11 @@ const loginUser = async (email: string, password: string) => {
     return false;
   }
   const secret = "KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30";
-  const token = jwt.sign({ name: user.name, email: user.email}, secret , {expiresIn: "7d"} );
+  const token = jwt.sign({ name: user.name, email: user.email}, config.jwtSecret as string , {expiresIn: "7d"} );
 
-  console.log({token})
+//   console.log({token})
 
-  return { user, token };
+  return { token, user };
 };
 
 export const authServices = {
